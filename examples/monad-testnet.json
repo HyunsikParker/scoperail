@@ -1,0 +1,47 @@
+{
+  "chainId": 10143,
+  "rpc": "https://testnet-rpc.monad.xyz/",
+  "contractAddress": "0x0A33cc51bd0776217815bd5B255E591D99985A1D",
+  "samples": [
+    {
+      "serviceKey": "notes",
+      "expected": {
+        "chainId": 10143,
+        "contractAddress": "0x0A33cc51bd0776217815bd5B255E591D99985A1D",
+        "grantId": "1",
+        "owner": "0x3c592C157B2Fee4A03CdC89159B8f6558f9c511C",
+        "delegate": "0xf82AB2324A19c4F5C0bD71b2F020E5dd96c8aD35",
+        "providerId": "0xe6de8b9879b8df7007517dd1404b5e197fa69fc9bf73a3ef19236375eb71b3dc",
+        "resourceId": "0xa7b5b1b4a60dd60d80ee92506f150d3ede2ceceacdb0d9f50bd8ceb484553be3",
+        "units": "1",
+        "nonce": "0",
+        "requestHash": "0x929c9e88b7c6d9cc9d0de40505aba08f405e563960757a403efd0a797124a314"
+      },
+      "request": {
+        "query": "receipt"
+      },
+      "salt": "0xe078613f86d087b824f7e7879523b3bb6caa8f091d18773e23962ce80e28702d",
+      "transactionHash": "0x19a68d927597b8a72c7dffae86e2a3b9d1ac40162a53770301496dd67c8a5648"
+    },
+    {
+      "serviceKey": "tasks",
+      "expected": {
+        "chainId": 10143,
+        "contractAddress": "0x0A33cc51bd0776217815bd5B255E591D99985A1D",
+        "grantId": "2",
+        "owner": "0x3c592C157B2Fee4A03CdC89159B8f6558f9c511C",
+        "delegate": "0xf82AB2324A19c4F5C0bD71b2F020E5dd96c8aD35",
+        "providerId": "0xf754e1a80b202e5c7204ca87e12c6afb338b1c1440ba20d4c4ed77783e31ea8e",
+        "resourceId": "0x6b9ee064c133d25624dd1aa6868b83f5e2b3023e47eaa6bd5295a9e5a4e61136",
+        "units": "1",
+        "nonce": "0",
+        "requestHash": "0x640cc0572a9ca81b9752784f53b20efe24a4fce27b0534bcbc1901b4f17ec6c3"
+      },
+      "request": {
+        "fixtureId": "release-demo"
+      },
+      "salt": "0x20e38489925e9817e563060d09a96756dd22e7833d19c9278601b183a885222a",
+      "transactionHash": "0x44fb1fd71dcc15c76d89f2e1f8ed8898113cdeb01c1e6ffc480a8cda511c8657"
+    }
+  ]
+}
