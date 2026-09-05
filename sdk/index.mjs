@@ -20,6 +20,7 @@ const forbiddenKeys = new Set(['__proto__', 'prototype', 'constructor']);
 const MAX_BYTES = 65_536;
 const MAX_NODES = 5_000;
 const MAX_DEPTH = 16;
+const utf8 = new TextEncoder();
 
 function fail(message) { throw new Error(`ScopeRail: ${message}`); }
 function uint(value, bits, name, nonzero = false) {
@@ -67,12 +68,12 @@ export function canonicalize(value) {
   let bytes = 0;
   let nodes = 0;
   function append(part) {
-    bytes += Buffer.byteLength(part, 'utf8');
+    bytes += utf8.encode(part).byteLength;
     if (bytes > MAX_BYTES) fail('request exceeds 65536 bytes');
     chunks.push(part);
   }
   function string(value) {
-    if (Buffer.byteLength(value, 'utf8') > MAX_BYTES) fail('request exceeds 65536 bytes');
+    if (value.length > MAX_BYTES || utf8.encode(value).byteLength > MAX_BYTES) fail('request exceeds 65536 bytes');
     // Unpaired UTF-16 surrogates have no unique valid UTF-8 representation.
     if (/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(value)) fail('invalid Unicode string');
     append(JSON.stringify(value));

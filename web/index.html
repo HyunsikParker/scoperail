@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScopeRail · scoped tool access</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="shell masthead">
+    <a class="wordmark" href="./">ScopeRail<span class="mark" aria-hidden="true">/</span></a>
+    <a class="guide" href="./README.md" target="_blank" rel="noopener">SDK guide ↗</a>
+  </header>
+  <main class="shell">
+    <section class="intro">
+      <p class="eyebrow">TOOL PERMISSIONS / DEVELOPER PLAYGROUND</p>
+      <h1>Scoped access for offchain tools.</h1>
+      <p class="lead">Grant two calls. Verify each request onchain. Revoke what remains.</p>
+      <div class="connection"><span id="network" class="badge">Checking deployment…</span><span id="network-detail"></span></div>
+    </section>
+    <section class="samples" id="samples" hidden aria-labelledby="sample-heading">
+      <div><h2 id="sample-heading">Inspect an admitted request</h2><p id="sample-description">No wallet needed. Verify a recorded testnet admission against the chain, then run its synthetic fixture.</p></div>
+      <div id="sample-buttons" class="button-row"></div>
+    </section>
+    <div class="workspace-heading"><h2>Try the lifecycle</h2><button id="connect" disabled>Connect testnet wallet</button></div>
+    <p id="wallet-note" class="muted">Only valueless testnet MON is used. No token approvals or asset deposits.</p>
+    <section class="workspace" aria-label="Permission lifecycle">
+      <article class="panel">
+        <div class="step"><span>01</span><h3>Set the boundary</h3></div>
+        <label for="service">Reference service</label>
+        <select id="service"><option value="notes">Notes search</option><option value="tasks">Task extraction</option></select>
+        <dl class="limits"><div><dt>Total allowance</dt><dd>2 calls</dd></div><div><dt>Per request</dt><dd>1 unit</dd></div><div><dt>Grant lifetime</dt><dd>10 minutes</dd></div></dl>
+        <button id="create" class="primary" disabled>Create 2-call grant</button>
+        <div class="permission-state"><span id="grant-status">No grant yet</span><strong id="remaining">—</strong><span>calls available</span></div>
+        <button id="revoke" class="quiet" disabled>Revoke remaining access</button>
+      </article>
+      <article class="panel">
+        <div class="step"><span>02</span><h3>Admit the request</h3></div>
+        <p>The request stays offchain. A salted commitment binds it to this admission.</p>
+        <pre id="request" aria-label="Synthetic request"></pre>
+        <button id="run" class="primary" disabled>Admit &amp; run once</button>
+        <button id="retry" class="quiet" disabled>Retry same delivery</button>
+        <button id="check" class="quiet" disabled>Check a revoked request</button>
+        <p class="small">A retry returns the result already associated with this receipt. It does not buy another call.</p>
+      </article>
+      <article class="panel output-panel">
+        <div class="step"><span>03</span><h3>Verify before work</h3></div>
+        <div class="result-heading"><span id="result-status">Waiting for a verified admission</span><span class="count"><strong id="work-count">0</strong> executions in this tab</span></div>
+        <pre id="result" aria-label="Service result">The service result will appear here.</pre>
+        <details id="receipt-details"><summary>Receipt binding</summary><dl id="receipt"></dl></details>
+      </article>
+    </section>
+    <p id="status" class="status" role="status" aria-live="polite">Checking the configured chain and contract bytecode.</p>
+    <section class="boundaries" aria-labelledby="boundaries-heading">
+      <h2 id="boundaries-heading">What this demonstrates</h2>
+      <p>The same SDK verifies both reference services. This playground runs synthetic fixtures in your browser; the repository includes server-side HTTP adapters. No external adoption is implied.</p>
+      <p>Revocation blocks new admissions, not work already admitted. Wallet addresses, scope identifiers and commitments are public. Duplicate-delivery records here last only for this tab; production services need a resource ACL and durable storage.</p>
+    </section>
+  </main>
+  <footer class="shell"><span>ScopeRail / MIT</span><span>No funds held. No external contract execution.</span></footer>
+</body>
+</html>

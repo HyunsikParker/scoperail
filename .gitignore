@@ -10,3 +10,4 @@ coverage/
 private/
 tmp/
 .DS_Store
+dist/

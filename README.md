@@ -21,6 +21,18 @@ To compile without running tests:
 npm run compile
 ```
 
+### Browser playground
+
+```sh
+npm run demo:local
+```
+
+This starts a loopback EVM, deploys the contract locally, creates two synthetic sample admissions and serves the playground at the printed local URL. Stop it with Ctrl+C. It does not deploy to Monad or use a real wallet. Temporary site files are removed when it stops.
+
+The browser uses the same SDK as the server-side adapters. It can verify either sample without a wallet, create a two-call grant, execute an admitted request, retry the delivery without repeated work, and revoke the remaining allowance. The displayed available count becomes zero after revocation even if unused units remain stored in the grant.
+
+Public builds require `SCOPERAIL_DEMO_CONFIG` to name a verified deployment configuration and run `npm run demo:build`. They accept only Monad Testnet (chain 10143) and its official RPC. The local unlocked-account mode requires an explicit local build flag and is never the public-build default. The page checks the deployed bytecode before enabling actions. There is no mainnet mode, analytics, embedded signing key or paid backend.
+
 ## Integrate a service
 
 1. Assign stable, opaque `providerId` and `resourceId` values. Resolve the authorized owner from your resource ACL; do not accept an owner supplied by the caller.
@@ -85,6 +97,6 @@ The test suite covers scope/owner binding, revocation, exact expiry, exhausted a
 
 ## License and AI assistance
 
-MIT; see [LICENSE](LICENSE). Runtime dependency: ethers (MIT). Build/test dependencies: Hardhat and solc-js (MIT). Their license notices remain with their installed packages.
+MIT; see [LICENSE](LICENSE). Runtime dependency: ethers (MIT). Build/test dependencies: Hardhat, solc-js and esbuild (MIT). Their license notices remain with their installed packages; the browser bundle includes the ethers notice.
 
 Codex was used to implement and review the contract, SDK, examples, tests and documentation. No personal dataset or third-party participant code is included. The reference adapters are part of this project, not external integrations.

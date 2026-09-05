@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { JsonRpcProvider, getAddress } from 'ethers';
 import { createMemoryReceiptStore, createRequestCommitment, runAdmittedWork } from '../sdk/index.mjs';
+export { requireSingleString } from './fixtures.mjs';
 
 /** Local demo server. Keep chain/contract/service scope in trusted server configuration. */
 export function startAdapter({ providerId, resourceId, validate, work, defaultPort }) {
@@ -58,12 +59,4 @@ export function startAdapter({ providerId, resourceId, validate, work, defaultPo
     process.stdout.write(`Synthetic adapter listening on http://127.0.0.1:${port}/run\n`);
   });
   return server;
-}
-
-export function requireSingleString(request, key, maxLength) {
-  if (!request || typeof request !== 'object' || Array.isArray(request)
-      || Object.keys(request).length !== 1 || typeof request[key] !== 'string'
-      || request[key].length < 1 || request[key].length > maxLength) {
-    throw new Error('Invalid synthetic fixture request');
-  }
 }
