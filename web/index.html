@@ -25,11 +25,20 @@
     </section>
     <div class="workspace-heading"><h2>Try the lifecycle</h2><button id="connect" disabled>Connect testnet wallet</button></div>
     <p id="wallet-note" class="muted">Only valueless testnet MON is used. No token approvals or asset deposits.</p>
+    <dl class="roles" aria-label="Wallet and loaded grant roles">
+      <div><dt>Connected signer</dt><dd id="signer-address">Not connected</dd></div>
+      <div><dt>Signer role</dt><dd id="signer-role">No loaded-grant role</dd></div>
+      <div><dt>Grant owner</dt><dd id="owner-address">—</dd></div>
+      <div><dt>Grant delegate</dt><dd id="loaded-delegate">—</dd></div>
+    </dl>
+    <div class="grant-loader"><label for="grant-id">Load grant ID</label><input id="grant-id" inputmode="numeric" placeholder="Positive grant ID" autocomplete="off"><button id="load" disabled>Load grant</button></div>
     <section class="workspace" aria-label="Permission lifecycle">
       <article class="panel">
         <div class="step"><span>01</span><h3>Set the boundary</h3></div>
         <label for="service">Reference service</label>
         <select id="service"><option value="notes">Notes search</option><option value="tasks">Task extraction</option></select>
+        <label class="delegate-label" for="delegate-address">Delegate address for new grant</label>
+        <input id="delegate-address" placeholder="0x…" autocomplete="off" spellcheck="false">
         <dl class="limits"><div><dt>Total allowance</dt><dd>2 calls</dd></div><div><dt>Per request</dt><dd>1 unit</dd></div><div><dt>Grant lifetime</dt><dd>10 minutes</dd></div></dl>
         <button id="create" class="primary" disabled>Create 2-call grant</button>
         <div class="permission-state"><span id="grant-status">No grant yet</span><strong id="remaining">—</strong><span>calls available</span></div>

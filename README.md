@@ -4,6 +4,20 @@ An onchain admission meter for offchain tools and context services. A resource o
 
 ScopeRail does not hold funds, approve tokens, execute external contracts, or put request text onchain. Units are an application-defined allowance, not a payment.
 
+## Monad Testnet deployment
+
+Contract `0x0A33cc51bd0776217815bd5B255E591D99985A1D` runs on Monad Testnet, chain `10143`. Its deployment transaction is `0x793c0f589ab138d0acf41991d0c38a0c3025c89e816f63a1581037c33b8f9fc1`.
+
+[examples/monad-testnet.json](examples/monad-testnet.json) contains two confirmed synthetic admissions and their request commitments. Both grants have been revoked; their earlier admissions remain verifiable. The samples require no wallet or new transaction.
+
+After installing dependencies and compiling, build the testnet playground with:
+
+```sh
+SCOPERAIL_DEMO_CONFIG=examples/monad-testnet.json npm run demo:build
+```
+
+Serve the generated `dist` directory with a static web server. The browser reads the official testnet RPC and runs the synthetic services locally in the tab.
+
 ## Run locally
 
 Requires Node.js 22.12 or newer and npm.
@@ -32,6 +46,8 @@ This starts a loopback EVM, deploys the contract locally, creates two synthetic 
 The browser uses the same SDK as the server-side adapters. It can verify either sample without a wallet, create a two-call grant, execute an admitted request, retry the delivery without repeated work, and revoke the remaining allowance. The displayed available count becomes zero after revocation even if unused units remain stored in the grant.
 
 Public builds require `SCOPERAIL_DEMO_CONFIG` to name a verified deployment configuration and run `npm run demo:build`. They accept only Monad Testnet (chain 10143) and its official RPC. The local unlocked-account mode requires an explicit local build flag and is never the public-build default. The page checks the deployed bytecode before enabling actions. There is no mainnet mode, analytics, embedded signing key or paid backend.
+
+In a hypothetical integration, document owner A grants partner agent C a limited allowance for search provider B; B resolves A from its own document ACL and verifies C's admission before searching. In the playground, enter C's delegate address while connected as A, then load the grant ID or switch to C to admit requests; only A can revoke. A single wallet may fill both roles, which the page displays explicitly. These browser services use synthetic fixtures, not private documents or a production ACL, and this scenario does not claim external adoption.
 
 ## Integrate a service
 

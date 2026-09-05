@@ -43,6 +43,12 @@ await build({ entryPoints: ['web/app.mjs'], outfile: resolve(outdir, 'app.js'), 
   legalComments: 'eof', define: { __DEMO_CONFIG__: JSON.stringify(config) }, logLevel: 'silent' });
 for (const name of ['index.html', 'style.css']) await copyFile(`web/${name}`, resolve(outdir, name));
 for (const name of ['README.md', 'LICENSE']) await copyFile(name, resolve(outdir, name));
+if (!local) {
+  await mkdir(resolve(outdir, 'examples'), { recursive: true });
+  await writeFile(resolve(outdir, 'examples/monad-testnet.json'), JSON.stringify({
+    chainId: config.chainId, rpc: config.rpc, contractAddress: config.contractAddress, samples,
+  }, null, 2) + '\n');
+}
 // Preserve upstream notices without source maps, absolute paths or build manifests.
 const license = await readFile('node_modules/ethers/LICENSE.md', 'utf8');
 await writeFile(resolve(outdir, 'THIRD_PARTY_LICENSES.txt'), `ethers\n\n${license}`);
