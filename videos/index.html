@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ScopeRail product demo and project pitch.">
+  <title>ScopeRail videos</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #202020; background: #fff; }
+    body { max-width: 1000px; margin: 0 auto; padding: 28px 24px 48px; line-height: 1.6; }
+    nav { display: flex; flex-wrap: wrap; gap: 20px; border-bottom: 1px solid #ddd; padding-bottom: 18px; }
+    a { color: inherit; text-underline-offset: 3px; }
+    h1 { margin: 28px 0 12px; font-size: 30px; }
+    h2 { font-size: 21px; margin: 32px 0 12px; }
+    p { max-width: 780px; }
+    video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #202020; }
+    .download { font-size: 14px; margin-top: 8px; }
+    footer { border-top: 1px solid #ddd; margin-top: 32px; padding-top: 16px; font-size: 14px; color: #555; }
+  </style>
+</head>
+<body>
+  <nav aria-label="Project"><a href="../">Open playground</a><a href="https://github.com/HyunsikParker/scoperail">Source and setup</a></nav>
+  <main>
+    <h1>ScopeRail videos</h1>
+    <p>These recordings verify existing Monad testnet admissions and run synthetic fixtures in the public playground. No wallet was connected and no new transaction was sent during recording.</p>
+    <section aria-labelledby="demo-heading">
+      <h2 id="demo-heading">Technical demo · 1:46</h2>
+      <video id="technical-demo" controls playsinline preload="metadata" aria-label="ScopeRail technical demo">
+        <source src="technical-demo.mp4" type="video/mp4">
+        <a href="technical-demo.mp4">Download the technical demo</a>
+      </video>
+      <p class="download"><a href="technical-demo.mp4">Open or download MP4</a></p>
+    </section>
+    <section aria-labelledby="pitch-heading">
+      <h2 id="pitch-heading">Project pitch · 1:08</h2>
+      <video id="pitch" controls playsinline preload="metadata" aria-label="ScopeRail project pitch">
+        <source src="pitch.mp4" type="video/mp4">
+        <a href="pitch.mp4">Download the project pitch</a>
+      </video>
+      <p class="download"><a href="pitch.mp4">Open or download MP4</a></p>
+    </section>
+  </main>
+  <footer>
+    <p>Narration was generated locally with Qwen3-TTS (Aiden voice). Codex assisted with the scripts and recording. The <a href="../README.md#license-and-ai-assistance">README</a> documents code assistance and licenses.</p>
+  </footer>
+</body>
+</html>
