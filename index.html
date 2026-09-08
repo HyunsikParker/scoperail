@@ -4,27 +4,55 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ScopeRail · scoped tool access</title>
+  <meta name="description" content="Give an agent a bounded allowance. Verify onchain admission before an offchain tool runs. Try two synthetic services without a wallet.">
   <link rel="stylesheet" href="./style.css">
   <script type="module" src="./app.js"></script>
 </head>
 <body>
+  <a class="skip-link" href="#playground">Skip to playground</a>
   <header class="shell masthead">
     <a class="wordmark" href="./">ScopeRail<span class="mark" aria-hidden="true">/</span></a>
-    <a class="guide" href="./README.md" target="_blank" rel="noopener">SDK guide ↗</a>
+    <nav aria-label="Main navigation"><a href="#playground">Playground</a><a class="guide" href="./README.md" target="_blank" rel="noopener">SDK guide ↗</a></nav>
   </header>
   <main class="shell">
     <section class="intro">
+      <div class="intro-copy">
       <p class="eyebrow">TOOL PERMISSIONS / DEVELOPER PLAYGROUND</p>
-      <h1>Scoped access for offchain tools.</h1>
+      <h1>Give agents access.<br><span>Keep the boundary.</span></h1>
       <p class="lead">Grant two calls. Verify each request onchain. Revoke what remains.</p>
+      <a class="hero-link" href="#playground">Explore the playground <span aria-hidden="true">↓</span></a>
+      </div>
+      <aside class="flow-card" aria-label="How ScopeRail works">
+        <p class="eyebrow">ONE REQUEST. A CHECKED BOUNDARY.</p>
+        <ol class="flow"><li><span class="flow-node">01</span><div><strong>Scope the access</strong><small>Owner → delegate · 2 calls</small></div></li><li><span class="flow-node">02</span><div><strong>Confirm admission</strong><small>Onchain allowance + commitment</small></div></li><li><span class="flow-node">03</span><div><strong>Run the offchain tool</strong><small>Service verifies before work</small></div></li></ol>
+        <p class="flow-note">Request text stays offchain.</p>
+      </aside>
+    </section>
+    <div class="deployment-bar">
       <div class="connection"><span id="network" class="badge">Checking deployment…</span><span id="network-detail"></span></div>
-    </section>
+      <span class="deployment-note">No funds held · No token approvals</span>
+    </div>
+    <div id="playground" class="playground-anchor"></div>
+    <div class="inspector">
     <section class="samples" id="samples" hidden aria-labelledby="sample-heading">
-      <div><h2 id="sample-heading">Inspect an admitted request</h2><p id="sample-description">No wallet needed. Verify a recorded testnet admission against the chain, then run its synthetic fixture.</p></div>
+      <div><p class="eyebrow">START HERE / NO WALLET NEEDED</p><h2 id="sample-heading">See a verified request in action.</h2><p id="sample-description">Verify a recorded testnet admission against the chain, then run its synthetic fixture.</p></div>
       <div id="sample-buttons" class="button-row"></div>
+      <div class="sample-help"><span class="sample-label">WHAT TO LOOK FOR</span><p>The service runs only after receipt verification. Retry the same delivery to see its cached result.</p><a href="#lifecycle">Create your own grant ↓</a></div>
     </section>
-    <div class="workspace-heading"><h2>Try the lifecycle</h2><button id="connect" disabled>Connect testnet wallet</button></div>
+      <article class="panel output-panel" id="result-panel" tabindex="-1" aria-labelledby="result-heading">
+        <div class="step"><span aria-hidden="true">↳</span><h3 id="result-heading">Verified output</h3></div>
+        <p id="result-context" class="result-context">Choose a sample, or create a grant to begin.</p>
+        <div class="result-heading"><span id="result-status" role="status" aria-live="polite">Waiting for a verified admission</span><span class="count"><strong id="work-count">0</strong> executions in this tab</span></div>
+        <div class="output-label">SERVICE RESPONSE <span>JSON</span></div>
+        <pre id="result" aria-label="Service result">The service result will appear here.</pre>
+        <button id="retry" class="quiet" disabled>Retry same delivery</button>
+        <details id="receipt-details"><summary>Receipt binding</summary><dl id="receipt"></dl></details>
+      </article>
+    </div>
+    <p id="status" class="status" role="status" aria-live="polite">Checking the configured chain and contract bytecode.</p>
+    <div class="workspace-heading" id="lifecycle"><div><p class="eyebrow">BUILD YOUR OWN GRANT</p><h2>Try the full lifecycle</h2></div><button id="connect" disabled>Connect testnet wallet</button></div>
     <p id="wallet-note" class="muted">Only valueless testnet MON is used. No token approvals or asset deposits.</p>
+    <details class="wallet-details"><summary>Wallet roles &amp; existing grants</summary>
     <dl class="roles" aria-label="Wallet and loaded grant roles">
       <div><dt>Connected signer</dt><dd id="signer-address">Not connected</dd></div>
       <div><dt>Signer role</dt><dd id="signer-role">No loaded-grant role</dd></div>
@@ -32,6 +60,7 @@
       <div><dt>Grant delegate</dt><dd id="loaded-delegate">—</dd></div>
     </dl>
     <div class="grant-loader"><label for="grant-id">Load grant ID</label><input id="grant-id" inputmode="numeric" placeholder="Positive grant ID" autocomplete="off"><button id="load" disabled>Load grant</button></div>
+    </details>
     <section class="workspace" aria-label="Permission lifecycle">
       <article class="panel">
         <div class="step"><span>01</span><h3>Set the boundary</h3></div>
@@ -49,18 +78,11 @@
         <p>The request stays offchain. A salted commitment binds it to this admission.</p>
         <pre id="request" aria-label="Synthetic request"></pre>
         <button id="run" class="primary" disabled>Admit &amp; run once</button>
-        <button id="retry" class="quiet" disabled>Retry same delivery</button>
         <button id="check" class="quiet" disabled>Check a revoked request</button>
         <p class="small">A retry returns the result already associated with this receipt. It does not buy another call.</p>
       </article>
-      <article class="panel output-panel">
-        <div class="step"><span>03</span><h3>Verify before work</h3></div>
-        <div class="result-heading"><span id="result-status">Waiting for a verified admission</span><span class="count"><strong id="work-count">0</strong> executions in this tab</span></div>
-        <pre id="result" aria-label="Service result">The service result will appear here.</pre>
-        <details id="receipt-details"><summary>Receipt binding</summary><dl id="receipt"></dl></details>
-      </article>
+
     </section>
-    <p id="status" class="status" role="status" aria-live="polite">Checking the configured chain and contract bytecode.</p>
     <section class="boundaries" aria-labelledby="boundaries-heading">
       <h2 id="boundaries-heading">What this demonstrates</h2>
       <p>The same SDK verifies both reference services. This playground runs synthetic fixtures in your browser; the repository includes server-side HTTP adapters. No external adoption is implied.</p>
