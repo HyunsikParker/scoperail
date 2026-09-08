@@ -15,6 +15,14 @@ const state = { ready: false, busy: false, owner: null, delegate: null, signer: 
 const format = value => JSON.stringify(value, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2);
 
 function message(text, error = false) { $('status').textContent = text; $('status').classList.toggle('error', error); }
+function revealResult() {
+  const panel = $('result-panel');
+  panel.focus({ preventScroll: true });
+  const bounds = panel.getBoundingClientRect();
+  if (bounds.top < 0 || bounds.bottom > window.innerHeight) panel.scrollIntoView({
+    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'center',
+  });
+}
 function roleSigner(role) { return config.local ? state[role] : state.signer; }
 function hasRole(role) {
   const address = config.local ? state[role + 'Account'] : state.signerAddress;
@@ -39,6 +47,8 @@ function render() {
   const expired = state.grant && BigInt(state.blockTime) >= state.grant.validUntil;
   const active = state.grant && !state.grant.revoked && !expired && state.grant.remaining > 0n;
   const writeLocked = state.busy || Boolean(state.uncertainTransaction);
+  document.querySelector('.workspace').setAttribute('aria-busy', String(state.busy));
+  $('sample-buttons').setAttribute('aria-busy', String(state.busy));
   $('connect').disabled = !state.ready || state.busy || Boolean(config.local ? state.owner : state.signer);
   $('create').disabled = !state.ready || writeLocked || !(config.local ? state.owner : state.signer) || !walletReady() || Boolean(active);
   $('run').disabled = writeLocked || !hasRole('delegate') || !walletReady() || !active;
@@ -101,6 +111,8 @@ async function deliver(payload, cached = false) {
   $('result').textContent = format(result);
   const delivery = cached || state.workCount === countBefore ? 'cached delivery' : 'work executed';
   $('result-status').textContent = `${services[payload.serviceKey].label} · verified receipt · ${delivery}`;
+  $('result-panel').dataset.delivery = 'verified';
+  $('result-context').textContent = `Verified ${services[payload.serviceKey].label.toLowerCase()} request: ${format(payload.request).replace(/\s+/g, ' ')}. Synthetic fixture executed in this tab.`;
   $('receipt').replaceChildren(...Object.entries({ chain: config.chainId, contract: config.contractAddress,
     grant: admission.grantId, nonce: admission.nonce, units: admission.units,
     receipt: admission.receiptId, transaction: admission.transactionHash }).map(([key, value]) => {
@@ -108,6 +120,7 @@ async function deliver(payload, cached = false) {
     dt.textContent = key; dd.textContent = String(value); row.append(dt, dd); return row;
   }));
   state.last = payload;
+  revealResult();
 }
 
 $('connect').textContent = config.local ? 'Use local test accounts' : 'Connect testnet wallet';
@@ -218,6 +231,12 @@ $('check').addEventListener('click', () => action('Checking the revoked onchain 
   catch (error) {
     if (error.message !== 'ScopeRail: grant revoked or invalid') throw error;
     $('result-status').textContent = 'New admission blocked · service not run';
+    $('result-panel').dataset.delivery = 'blocked';
+    $('result-context').textContent = `Grant ${state.grantId} is revoked. Previously admitted work remains valid.`;
+    $('result').textContent = 'No new service result. The revoked grant cannot admit another request.';
+    $('receipt').replaceChildren();
+    $('receipt-details').open = false;
+    revealResult();
     message('The SDK rejected a new admission because the onchain grant is revoked. No transaction was sent.');
     return;
   }
