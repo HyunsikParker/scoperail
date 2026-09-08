@@ -1,6 +1,9 @@
 import { createServer } from 'node:http';
+import { createHash } from 'node:crypto';
+import { join } from 'node:path';
 import { JsonRpcProvider, getAddress } from 'ethers';
-import { createMemoryReceiptStore, createRequestCommitment, runAdmittedWork } from '../sdk/index.mjs';
+import { createRequestCommitment, runAdmittedWork } from '../sdk/index.mjs';
+import { createFileReceiptStore } from '../sdk/file-receipt-store.mjs';
 export { requireSingleString } from './fixtures.mjs';
 
 /** Local demo server. Keep chain/contract/service scope in trusted server configuration. */
@@ -16,7 +19,12 @@ export function startAdapter({ providerId, resourceId, validate, work, defaultPo
   // A grant made by an arbitrary caller is not authority over this service's data.
   const owner = getAddress(RESOURCE_OWNER);
   const provider = new JsonRpcProvider(RPC_URL);
-  const receiptStore = createMemoryReceiptStore(); // Not durable across restarts.
+  const namespace = createHash('sha256').update(JSON.stringify([
+    CHAIN_ID, contractAddress, owner, providerId, resourceId,
+  ])).digest('hex');
+  const receiptStore = createFileReceiptStore({
+    directory: join(process.env.RECEIPT_STORE_DIR ?? 'private/receipts', namespace),
+  });
   const port = Number(process.env.PORT ?? defaultPort);
   if (!Number.isInteger(port) || port < 1 || port > 65_535) throw new Error('Invalid PORT.');
   const server = createServer(async (req, res) => {

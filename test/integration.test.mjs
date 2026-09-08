@@ -1,6 +1,8 @@
 import { before, after, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 import { ContractFactory, JsonRpcProvider } from 'ethers';
@@ -39,23 +41,27 @@ async function fixture(service, request, grantOwner = owner) {
   return { contract, expected, admission, request, ...commitment };
 }
 
-async function adapter(t, script, expected, trustedOwner = expected.owner) {
+async function adapter(t, script, expected, trustedOwner = expected.owner, receiptDirectory) {
+  const directory = receiptDirectory ?? await mkdtemp(join(tmpdir(), 'scoperail-adapter-'));
+  if (!receiptDirectory) t.after(() => rm(directory, { recursive: true, force: true }));
   const probe = createServer();
   await new Promise(resolve => probe.listen(0, '127.0.0.1', resolve));
   const port = probe.address().port;
   await new Promise(resolve => probe.close(resolve));
   const child = spawn(process.execPath, [script], {
     env: { ...process.env, RPC_URL: process.env.SCOPERAIL_LOCAL_RPC, CHAIN_ID: '31337',
-      SCOPERAIL_ADDRESS: expected.contractAddress, RESOURCE_OWNER: trustedOwner, PORT: String(port) },
+      SCOPERAIL_ADDRESS: expected.contractAddress, RESOURCE_OWNER: trustedOwner, PORT: String(port),
+      RECEIPT_STORE_DIR: directory },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-  t.after(async () => {
-    if (child.exitCode === null) {
+  const stop = async () => {
+    if (child.exitCode === null && child.signalCode === null) {
       const closed = new Promise(resolve => child.once('close', resolve));
       child.kill('SIGTERM');
       await closed;
     }
-  });
+  };
+  t.after(stop);
   await new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('adapter startup timed out')), 5000);
     child.stdout.once('data', () => { clearTimeout(timer); resolve(); });
@@ -63,7 +69,7 @@ async function adapter(t, script, expected, trustedOwner = expected.owner) {
     child.once('exit', code => { clearTimeout(timer); reject(new Error(`adapter exited: ${code}`)); });
     child.stderr.resume();
   });
-  return async fixture => {
+  const post = async fixture => {
     const response = await fetch(`http://127.0.0.1:${port}/run`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(8000),
       body: JSON.stringify({ transactionHash: fixture.admission.transactionHash,
@@ -72,7 +78,22 @@ async function adapter(t, script, expected, trustedOwner = expected.owner) {
     });
     return { status: response.status, body: await response.json() };
   };
+  post.stop = stop;
+  return post;
 }
+
+test('HTTP adapter restarts with durable result and still rejects a changed request', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'scoperail-restart-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const f = await fixture(notes, { query: 'receipt' });
+  const first = await adapter(t, 'examples/notes-search.mjs', f.expected, f.expected.owner, directory);
+  const result = await first(f);
+  assert.equal(result.status, 200);
+  await first.stop();
+  const second = await adapter(t, 'examples/notes-search.mjs', f.expected, f.expected.owner, directory);
+  assert.deepEqual(await second(f), result);
+  assert.equal((await second({ ...f, request: { query: 'changed' } })).status, 403);
+});
 
 test('real chain receipt authorizes notes-search HTTP adapter and repeat delivery returns the same result', async t => {
   const f = await fixture(notes, { query: 'receipt' });

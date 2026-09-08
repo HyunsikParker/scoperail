@@ -99,6 +99,10 @@ node examples/task-extraction.mjs
 
 They listen on loopback ports 8787 and 8788 respectively. Each accepts `POST /run` with JSON fields `transactionHash`, `grantId`, `delegate`, `nonce`, `salt` and `request`. Use decimal strings for grant IDs and nonces. The service fixes the owner, provider, resource and one-unit cost independently of that body. Each service's IDs are exported by its module.
 
+The adapters persist duplicate-delivery records under `private/receipts` relative to their working directory. Set `RECEIPT_STORE_DIR` to a stable absolute directory on trusted local disk when restarting or running multiple processes. Records are separated by chain, contract, owner and service scope; processes for the same service must share the directory. The Node-only `sdk/file-receipt-store.mjs` exports `createFileReceiptStore({ directory })` for other adapters. Completed results survive process restarts, including BigInt fields. Every HTTP retry still verifies its admission before reading a cached result.
+
+A competing process receives an error while a receipt is pending and can retry after completion. If work fails or the process exits before the result is committed, the claim remains unresolved and subsequent requests fail closed. Inspect the application's actual outcome before any manual reconciliation; deleting a claim can repeat a side effect. This is not a transaction with the downstream service and does not guarantee exactly-once external effects. Do not use network filesystems, discard the directory on restart, or share it with untrusted users. Results remain on disk without automatic expiry and need application-specific storage quotas, retention and backup policies.
+
 ## Authorization and privacy boundaries
 
 - A grant binds its owner, delegate, provider, resource, expiry, per-call cap and total allowance. Nonces start at zero and advance by one for each accepted request.
@@ -106,7 +110,7 @@ They listen on loopback ports 8787 and 8788 respectively. Each accepts `POST /ru
 - The verifier checks the chain, configured contract, sender, direct `consume` calldata, transaction/block agreement, confirmations and exact `Admission` event. Default verification requires two confirmations and has a 60-second timeout. This relies on the configured RPC's accuracy and is not an independent consensus proof.
 - Only direct transactions to `consume` are supported. Nested smart-account execution and relayed transactions are not supported by this verifier.
 - A commitment is a salted hash, not encryption. Wallet addresses, scope IDs, costs, nonces, timing and commitments are public. Do not put names, contact details or private descriptions in identifiers. The service still receives the request and salt offchain.
-- The examples use process-local memory for duplicate delivery. It does not survive a restart or coordinate multiple servers. Production adapters need a trusted resource ACL, a durable idempotency store, authenticated transport and application-specific limits.
+- The examples coordinate duplicate delivery through durable records on one trusted local filesystem. Separate machines need an appropriate shared transactional store. Production adapters also need a trusted resource ACL, authenticated transport, recovery procedures and application-specific limits.
 - Units do not prove that work was useful, correctly priced or completed. ScopeRail is not a credential registry, oracle, payment system, or independent security audit.
 
 The test suite covers scope/owner binding, revocation, exact expiry, exhausted and concurrent allowances, receipt validation, request commitments, and the two local HTTP integrations. These are project tests, not evidence of third-party adoption or an external audit.
