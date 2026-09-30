@@ -18,6 +18,12 @@ SCOPERAIL_DEMO_CONFIG=examples/monad-testnet.json npm run demo:build
 
 Serve the generated `dist` directory with a static web server. The browser reads the official testnet RPC and runs the synthetic services locally in the tab.
 
+### Verify the deployed samples through the HTTP adapters
+
+After `npm ci --ignore-scripts` and `npm run compile`, run `npm run verify:testnet`. It checks the deployed bytecode and both confirmed sample admissions against the official Monad Testnet RPC, then sends the synthetic requests to the actual loopback HTTP adapters. It checks persisted delivery across a process restart and rejects changed requests and a mismatched resource owner. Both sample grants are revoked; their earlier admissions remain valid.
+
+This command needs internet access but no wallet, signature, balance or new chain transaction. The temporary local receipt store is removed when the command finishes. The fixtures are project examples, not third-party integrations. RPC outages fail verification rather than silently switching to a local chain.
+
 ## Run locally
 
 Requires Node.js 22.12 or newer and npm.

@@ -9,6 +9,7 @@
   },
   "scripts": {
     "compile": "node scripts/compile.mjs",
+    "verify:testnet": "node scripts/verify-testnet.mjs",
     "test": "node scripts/test-local.mjs",
     "test:contract": "node scripts/test-local.mjs test/contract.test.mjs",
     "demo:build": "node scripts/build-demo.mjs",
