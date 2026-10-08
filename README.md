@@ -18,6 +18,35 @@ SCOPERAIL_DEMO_CONFIG=examples/monad-testnet.json npm run demo:build
 
 Serve the generated `dist` directory with a static web server. The browser reads the official testnet RPC and runs the synthetic services locally in the tab.
 
+### Verify the deployed samples through the HTTP adapters
+
+After `npm ci --ignore-scripts` and `npm run compile`, run `npm run verify:testnet`. It checks the deployed bytecode and both confirmed sample admissions against the official Monad Testnet RPC, then sends the synthetic requests to the actual loopback HTTP adapters. It checks persisted delivery across a process restart and rejects changed requests and a mismatched resource owner. Both sample grants are revoked; their earlier admissions remain valid.
+
+This command needs internet access but no wallet, signature, balance or new chain transaction. The temporary local receipt store is removed when the command finishes. The fixtures are project examples, not third-party integrations. RPC outages fail verification rather than silently switching to a local chain.
+
+## Why Monad
+
+Monad sits on the critical path of every new admission: the delegate sends one `consume` transaction and waits for the configured confirmations before the service verifies the receipt and runs the request. Per-call admission is only practical where blocks are fast and fees are low, which is why ScopeRail runs on Monad. On 2026-09-05 each of the two testnet `consume` transactions used 150,000 gas and cost 0.0153 testnet MON; these are testnet figures, not a mainnet cost or latency benchmark.
+
+## Architecture
+
+1. **`createGrant` — owner A to the contract.** A creates an allowance for agent C that fixes the delegate, provider, resource, expiry, total budget and per-call limit.
+2. **`consume` — agent C to the contract.** C commits the exact request with a random salt, keeps the request and salt offchain, and submits the next nonce, unit cost and commitment. The contract decrements the allowance and emits an `Admission` receipt.
+3. **`POST /run` — agent C to provider B.** C sends the transaction hash, grant ID, delegate, nonce, salt and request. B takes the resource owner, provider ID, resource ID and unit cost from trusted configuration and its own ACL, not from C's claimed scope.
+4. **Verify — provider B.** The adapter reconstructs the commitment and the expected admission. The SDK checks the chain, confirmations, canonical block, transaction sender and destination, zero value, exact direct `consume` calldata and the single matching `Admission` event.
+5. **`runOnce` — provider B.** Only a verified receipt reaches the receipt store and work callback. The file-backed reference store reuses completed results after a process restart and fails closed on pending, uncertain or unreadable claims; it does not guarantee exactly-once effects in a downstream service.
+
+## Technology stack
+
+| Layer | Technology |
+| --- | --- |
+| Chain | Monad Testnet, EVM chain 10143 |
+| Contract | Solidity 0.8.36, compiled for the Shanghai EVM target |
+| SDK and adapters | Node.js 22.12+ ES modules and ethers 6.17 |
+| Receipt persistence | Node.js filesystem and V8 serialization on trusted local disk |
+| Browser playground | HTML, CSS and JavaScript bundled with esbuild 0.28 |
+| Build and tests | solc-js 0.8.36, Hardhat 3.15 local EVM and the Node.js test runner |
+
 ## Run locally
 
 Requires Node.js 22.12 or newer and npm.
@@ -99,6 +128,10 @@ node examples/task-extraction.mjs
 
 They listen on loopback ports 8787 and 8788 respectively. Each accepts `POST /run` with JSON fields `transactionHash`, `grantId`, `delegate`, `nonce`, `salt` and `request`. Use decimal strings for grant IDs and nonces. The service fixes the owner, provider, resource and one-unit cost independently of that body. Each service's IDs are exported by its module.
 
+The adapters persist duplicate-delivery records under `private/receipts` relative to their working directory. Set `RECEIPT_STORE_DIR` to a stable absolute directory on trusted local disk when restarting or running multiple processes. Records are separated by chain, contract, owner and service scope; processes for the same service must share the directory. The Node-only `sdk/file-receipt-store.mjs` exports `createFileReceiptStore({ directory })` for other adapters. Completed results survive process restarts, including BigInt fields. Every HTTP retry still verifies its admission before reading a cached result.
+
+A competing process receives an error while a receipt is pending and can retry after completion. If work fails or the process exits before the result is committed, the claim remains unresolved and subsequent requests fail closed. Inspect the application's actual outcome before any manual reconciliation; deleting a claim can repeat a side effect. This is not a transaction with the downstream service and does not guarantee exactly-once external effects. Do not use network filesystems, discard the directory on restart, or share it with untrusted users. Results remain on disk without automatic expiry and need application-specific storage quotas, retention and backup policies.
+
 ## Authorization and privacy boundaries
 
 - A grant binds its owner, delegate, provider, resource, expiry, per-call cap and total allowance. Nonces start at zero and advance by one for each accepted request.
@@ -106,7 +139,7 @@ They listen on loopback ports 8787 and 8788 respectively. Each accepts `POST /ru
 - The verifier checks the chain, configured contract, sender, direct `consume` calldata, transaction/block agreement, confirmations and exact `Admission` event. Default verification requires two confirmations and has a 60-second timeout. This relies on the configured RPC's accuracy and is not an independent consensus proof.
 - Only direct transactions to `consume` are supported. Nested smart-account execution and relayed transactions are not supported by this verifier.
 - A commitment is a salted hash, not encryption. Wallet addresses, scope IDs, costs, nonces, timing and commitments are public. Do not put names, contact details or private descriptions in identifiers. The service still receives the request and salt offchain.
-- The examples use process-local memory for duplicate delivery. It does not survive a restart or coordinate multiple servers. Production adapters need a trusted resource ACL, a durable idempotency store, authenticated transport and application-specific limits.
+- The examples coordinate duplicate delivery through durable records on one trusted local filesystem. Separate machines need an appropriate shared transactional store. Production adapters also need a trusted resource ACL, authenticated transport, recovery procedures and application-specific limits.
 - Units do not prove that work was useful, correctly priced or completed. ScopeRail is not a credential registry, oracle, payment system, or independent security audit.
 
 The test suite covers scope/owner binding, revocation, exact expiry, exhausted and concurrent allowances, receipt validation, request commitments, and the two local HTTP integrations. These are project tests, not evidence of third-party adoption or an external audit.
