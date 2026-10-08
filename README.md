@@ -24,6 +24,29 @@ After `npm ci --ignore-scripts` and `npm run compile`, run `npm run verify:testn
 
 This command needs internet access but no wallet, signature, balance or new chain transaction. The temporary local receipt store is removed when the command finishes. The fixtures are project examples, not third-party integrations. RPC outages fail verification rather than silently switching to a local chain.
 
+## Why Monad
+
+Monad sits on the critical path of every new admission: the delegate sends one `consume` transaction and waits for the configured confirmations before the service verifies the receipt and runs the request. Per-call admission is only practical where blocks are fast and fees are low, which is why ScopeRail runs on Monad. On 2026-09-05 each of the two testnet `consume` transactions used 150,000 gas and cost 0.0153 testnet MON; these are testnet figures, not a mainnet cost or latency benchmark.
+
+## Architecture
+
+1. **`createGrant` — owner A to the contract.** A creates an allowance for agent C that fixes the delegate, provider, resource, expiry, total budget and per-call limit.
+2. **`consume` — agent C to the contract.** C commits the exact request with a random salt, keeps the request and salt offchain, and submits the next nonce, unit cost and commitment. The contract decrements the allowance and emits an `Admission` receipt.
+3. **`POST /run` — agent C to provider B.** C sends the transaction hash, grant ID, delegate, nonce, salt and request. B takes the resource owner, provider ID, resource ID and unit cost from trusted configuration and its own ACL, not from C's claimed scope.
+4. **Verify — provider B.** The adapter reconstructs the commitment and the expected admission. The SDK checks the chain, confirmations, canonical block, transaction sender and destination, zero value, exact direct `consume` calldata and the single matching `Admission` event.
+5. **`runOnce` — provider B.** Only a verified receipt reaches the receipt store and work callback. The file-backed reference store reuses completed results after a process restart and fails closed on pending, uncertain or unreadable claims; it does not guarantee exactly-once effects in a downstream service.
+
+## Technology stack
+
+| Layer | Technology |
+| --- | --- |
+| Chain | Monad Testnet, EVM chain 10143 |
+| Contract | Solidity 0.8.36, compiled for the Shanghai EVM target |
+| SDK and adapters | Node.js 22.12+ ES modules and ethers 6.17 |
+| Receipt persistence | Node.js filesystem and V8 serialization on trusted local disk |
+| Browser playground | HTML, CSS and JavaScript bundled with esbuild 0.28 |
+| Build and tests | solc-js 0.8.36, Hardhat 3.15 local EVM and the Node.js test runner |
+
 ## Run locally
 
 Requires Node.js 22.12 or newer and npm.
